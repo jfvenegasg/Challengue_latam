@@ -1,6 +1,4 @@
-import numpy as np
 import pandas as pd
-from datetime import datetime
 
 from typing import Tuple, Union, List
 
@@ -33,27 +31,15 @@ class DelayModel:
             or
             pd.DataFrame: features.
         """
-      
-        def get_min_diff(data):
-            fecha_o = datetime.strptime(data['Fecha-O'], '%Y-%m-%d %H:%M:%S')
-            fecha_i = datetime.strptime(data['Fecha-I'], '%Y-%m-%d %H:%M:%S')
-            min_diff = ((fecha_o - fecha_i).total_seconds())/60
-            return min_diff
 
-        data['min_diff'] = data.apply(get_min_diff, axis = 1)
-        threshold_in_minutes = 15  
-        data['delay'] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)     
-        
-        
         training_data = shuffle(data[['OPERA', 'MES', 'TIPOVUELO', 'SIGLADES', 'DIANOM', 'delay']], random_state = 111)
-
+        
         features = pd.concat([
         pd.get_dummies(data['OPERA'], prefix = 'OPERA'),
         pd.get_dummies(data['TIPOVUELO'], prefix = 'TIPOVUELO'), 
         pd.get_dummies(data['MES'], prefix = 'MES')], 
         axis = 1
         )
-
         target = data['delay']
 
         x_train, x_test, y_train, y_test = train_test_split(features, target, test_size = 0.33, random_state = 42)
@@ -73,7 +59,7 @@ class DelayModel:
             features (pd.DataFrame): preprocessed data.
             target (pd.DataFrame): target.
         """
-        self._model.fit(x_train,y_train)
+        self._model.fit(features,target)
         return
 
     def predict(
@@ -89,7 +75,7 @@ class DelayModel:
         Returns:
             (List[int]): predicted targets.
         """
-        predictions = self._model.predict(x_test)
+        predictions = self._model.predict(features)
         return predictions
 
 # Cargar tus datos en un DataFrame de pandas
@@ -99,12 +85,12 @@ data = pd.read_csv('data/data.csv')
 model = DelayModel()
 
 # Preprocesar los datos
-x_train, x_test, y_train, y_test = model.preprocess(data)
+features, target = model.preprocess(data)
 
 # Entrenar el modelo
-model.fit(x_train, y_train)
+model.fit(features, target)
 
 # Realizar predicciones
-#new_data = pd.read_csv("data/data.csv")  # Reemplaza con tus nuevos datos
-predictions = model.predict(x_test)
+new_data = pd.read_csv("data.csv")  # Reemplaza con tus nuevos datos
+predictions = model.predict(new_data)
 print(predictions)
