@@ -18,7 +18,7 @@ class TestModel(unittest.TestCase):
         "MES_11",
         "OPERA_Sky Airline",
         "OPERA_Copa Air"
-    ]    
+    ]
 
     TARGET_COL = [
         "delay"
@@ -28,10 +28,8 @@ class TestModel(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         self.model = DelayModel()
-        self.data = pd.read_csv(filepath_or_buffer="data/data.csv",low_memory=False)
-        features_validation,target_validation = self.model.preprocess(self.data,target_column="delay")
+        self.data = pd.read_csv(filepath_or_buffer="../data/data.csv")
         
-        self.model.fit(features=features_validation, target=target_validation)
 
     def test_model_preprocess_for_training(
         self
