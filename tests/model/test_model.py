@@ -3,7 +3,10 @@ import pandas as pd
 
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
-from challenge.model import DelayModel
+import sys
+sys.path.append("challenge")
+
+from model import DelayModel
 
 class TestModel(unittest.TestCase):
 

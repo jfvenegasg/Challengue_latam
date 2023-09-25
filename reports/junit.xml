@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="4" time="448.655" timestamp="2023-09-25T15:56:36.564462" hostname="DESKTOP-9HU6DH7"><testcase classname="tests.model.test_model.TestModel" name="test_model_fit" time="104.987" /><testcase classname="tests.model.test_model.TestModel" name="test_model_predict" time="119.255"><failure message="ValueError: could not broadcast input array from shape (68206,10) into shape (68206,)">self = &lt;Challengue_latam.tests.model.test_model.TestModel testMethod=test_model_predict&gt;
+
+    def test_model_predict(
+        self
+    ):
+        features = self.model.preprocess(
+            data=self.data
+        )
+    
+&gt;       predicted_targets = self.model.predict(
+            features=features
+        )
+
+tests\model\test_model.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+challenge\model.py:231: in predict
+    predictions = self._model.predict(features)
+..\..\AppData\Local\Programs\Python\Python310\lib\site-packages\xgboost\sklearn.py:1549: in predict
+    class_probs = super().predict(
+..\..\AppData\Local\Programs\Python\Python310\lib\site-packages\xgboost\sklearn.py:1164: in predict
+    predts = self.get_booster().inplace_predict(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;xgboost.core.Booster object at 0x000001AED1F5C9D0&gt;
+data = (       OPERA_Latin American Wings  MES_7  MES_10  OPERA_Grupo LATAM  MES_12  TIPOVUELO_I  MES_4  MES_11  OPERA_Sky Ai...0
+4          0
+...      ...
+68201      1
+68202      1
+68203      1
+68204      0
+68205      0
+
+[68206 rows x 1 columns])
+iteration_range = (0, 0), predict_type = 'value', missing = nan, validate_features = True, base_margin = None, strict_shape = False
+
+    def inplace_predict(
+        self,
+        data: DataType,
+        iteration_range: Tuple[int, int] = (0, 0),
+        predict_type: str = "value",
+        missing: float = np.nan,
+        validate_features: bool = True,
+        base_margin: Any = None,
+        strict_shape: bool = False,
+    ) -&gt; NumpyOrCupy:
+        """Run prediction in-place when possible, Unlike :py:meth:`predict` method,
+        inplace prediction does not cache the prediction result.
+    
+        Calling only ``inplace_predict`` in multiple threads is safe and lock
+        free.  But the safety does not hold when used in conjunction with other
+        methods. E.g. you can't train the booster in one thread and perform
+        prediction in the other.
+    
+        .. note::
+    
+            If the device ordinal of the input data doesn't match the one configured for
+            the booster, data will be copied to the booster device.
+    
+        .. code-block:: python
+    
+            booster.set_param({"device": "cuda:0"})
+            booster.inplace_predict(cupy_array)
+    
+            booster.set_param({"device": "cpu"})
+            booster.inplace_predict(numpy_array)
+    
+        .. versionadded:: 1.1.0
+    
+        Parameters
+        ----------
+        data :
+            The input data.
+        iteration_range :
+            See :py:meth:`predict` for details.
+        predict_type :
+            * `value` Output model prediction values.
+            * `margin` Output the raw untransformed margin value.
+        missing :
+            See :py:obj:`xgboost.DMatrix` for details.
+        validate_features:
+            See :py:meth:`xgboost.Booster.predict` for details.
+        base_margin:
+            See :py:obj:`xgboost.DMatrix` for details.
+    
+            .. versionadded:: 1.4.0
+    
+        strict_shape:
+            See :py:meth:`xgboost.Booster.predict` for details.
+    
+            .. versionadded:: 1.4.0
+    
+        Returns
+        -------
+        prediction : numpy.ndarray/cupy.ndarray
+            The prediction result.  When input data is on GPU, prediction result is
+            stored in a cupy array.
+    
+        """
+        preds = ctypes.POINTER(ctypes.c_float)()
+    
+        # once caching is supported, we can pass id(data) as cache id.
+        args = make_jcargs(
+            type=1 if predict_type == "margin" else 0,
+            training=False,
+            iteration_begin=iteration_range[0],
+            iteration_end=iteration_range[1],
+            missing=missing,
+            strict_shape=strict_shape,
+            cache_id=0,
+        )
+        shape = ctypes.POINTER(c_bst_ulong)()
+        dims = c_bst_ulong()
+    
+        if base_margin is not None:
+            proxy: Optional[_ProxyDMatrix] = _ProxyDMatrix()
+            assert proxy is not None
+            proxy.set_info(base_margin=base_margin)
+            p_handle = proxy.handle
+        else:
+            proxy = None
+            p_handle = ctypes.c_void_p()
+        assert proxy is None or isinstance(proxy, _ProxyDMatrix)
+    
+        from .data import (
+            _array_interface,
+            _is_cudf_df,
+            _is_cupy_array,
+            _is_list,
+            _is_pandas_df,
+            _is_pandas_series,
+            _is_tuple,
+            _transform_pandas_df,
+        )
+    
+        enable_categorical = True
+        if _is_pandas_series(data):
+            import pandas as pd
+    
+            data = pd.DataFrame(data)
+        if _is_pandas_df(data):
+            data, fns, _ = _transform_pandas_df(data, enable_categorical)
+            if validate_features:
+                self._validate_features(fns)
+        if _is_list(data) or _is_tuple(data):
+&gt;           data = np.array(data)
+E           ValueError: could not broadcast input array from shape (68206,10) into shape (68206,)
+
+..\..\AppData\Local\Programs\Python\Python310\lib\site-packages\xgboost\core.py:2418: ValueError</failure></testcase><testcase classname="tests.model.test_model.TestModel" name="test_model_preprocess_for_serving" time="118.938"><failure message="AssertionError: assert False&#10; +  where False = isinstance((       OPERA_Latin American Wings  MES_7  ...  OPERA_Sky Airline  OPERA_Copa Air\n0                               0   ...0\n4          0\n...      ...\n68201      1\n68202      1\n68203      1\n68204      0\n68205      0\n\n[68206 rows x 1 columns]), &lt;class 'pandas.core.frame.DataFrame'&gt;)&#10; +    where &lt;class 'pandas.core.frame.DataFrame'&gt; = pd.DataFrame">self = &lt;Challengue_latam.tests.model.test_model.TestModel testMethod=test_model_preprocess_for_serving&gt;
+
+    def test_model_preprocess_for_serving(
+        self
+    ):
+        features = self.model.preprocess(
+            data=self.data
+        )
+    
+&gt;       assert isinstance(features, pd.DataFrame)
+E       AssertionError: assert False
+E        +  where False = isinstance((       OPERA_Latin American Wings  MES_7  ...  OPERA_Sky Airline  OPERA_Copa Air\n0                               0   ...0\n4          0\n...      ...\n68201      1\n68202      1\n68203      1\n68204      0\n68205      0\n\n[68206 rows x 1 columns]), &lt;class 'pandas.core.frame.DataFrame'&gt;)
+E        +    where &lt;class 'pandas.core.frame.DataFrame'&gt; = pd.DataFrame
+
+tests\model\test_model.py:63: AssertionError</failure></testcase><testcase classname="tests.model.test_model.TestModel" name="test_model_preprocess_for_training" time="101.893" /></testsuite></testsuites>
