@@ -15,6 +15,53 @@ class DelayModel:
         self
     ):  
         data=pd.read_csv('data/data.csv', low_memory=False)
+
+        def get_period_day(date):
+            date_time = datetime.strptime(date, '%Y-%m-%d %H:%M:%S').time()
+            morning_min = datetime.strptime("05:00", '%H:%M').time()
+            morning_max = datetime.strptime("11:59", '%H:%M').time()
+            afternoon_min = datetime.strptime("12:00", '%H:%M').time()
+            afternoon_max = datetime.strptime("18:59", '%H:%M').time()
+            evening_min = datetime.strptime("19:00", '%H:%M').time()
+            evening_max = datetime.strptime("23:59", '%H:%M').time()
+            night_min = datetime.strptime("00:00", '%H:%M').time()
+            night_max = datetime.strptime("4:59", '%H:%M').time()
+    
+            if(date_time > morning_min and date_time < morning_max):
+                return 'mañana'
+            elif(date_time > afternoon_min and date_time < afternoon_max):
+                return 'tarde'
+            elif(
+                (date_time > evening_min and date_time < evening_max) or
+                (date_time > night_min and date_time < night_max)
+            ):
+                return 'noche'
+
+        data['period_day'] = data['Fecha-I'].apply(get_period_day)
+
+        def is_high_season(fecha):
+            fecha_año = int(fecha.split('-')[0])
+            fecha = datetime.strptime(fecha, '%Y-%m-%d %H:%M:%S')
+            range1_min = datetime.strptime('15-Dec', '%d-%b').replace(year = fecha_año)
+            range1_max = datetime.strptime('31-Dec', '%d-%b').replace(year = fecha_año)
+            range2_min = datetime.strptime('1-Jan', '%d-%b').replace(year = fecha_año)
+            range2_max = datetime.strptime('3-Mar', '%d-%b').replace(year = fecha_año)
+            range3_min = datetime.strptime('15-Jul', '%d-%b').replace(year = fecha_año)
+            range3_max = datetime.strptime('31-Jul', '%d-%b').replace(year = fecha_año)
+            range4_min = datetime.strptime('11-Sep', '%d-%b').replace(year = fecha_año)
+            range4_max = datetime.strptime('30-Sep', '%d-%b').replace(year = fecha_año)
+    
+            if ((fecha >= range1_min and fecha <= range1_max) or 
+                (fecha >= range2_min and fecha <= range2_max) or 
+                (fecha >= range3_min and fecha <= range3_max) or
+                (fecha >= range4_min and fecha <= range4_max)):
+                return 1
+            else:
+                return 0
+
+        data['high_season'] = data['Fecha-I'].apply(is_high_season)
+
+
         def get_min_diff(data):
             fecha_o = datetime.strptime(data['Fecha-O'], '%Y-%m-%d %H:%M:%S')
             fecha_i = datetime.strptime(data['Fecha-I'], '%Y-%m-%d %H:%M:%S')
@@ -25,15 +72,6 @@ class DelayModel:
         threshold_in_minutes = 15  
         data['delay'] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)     
         
-        
-        training_data = shuffle(data[['OPERA', 'MES', 'TIPOVUELO', 'SIGLADES', 'DIANOM', 'delay']], random_state = 111)
-
-        features = pd.concat([
-        pd.get_dummies(data['OPERA'], prefix = 'OPERA'),
-        pd.get_dummies(data['TIPOVUELO'], prefix = 'TIPOVUELO'), 
-        pd.get_dummies(data['MES'], prefix = 'MES')], 
-        axis = 1
-        )
 
         target = data['delay']
 
@@ -60,7 +98,53 @@ class DelayModel:
             or
             pd.DataFrame: features.
         """
-      
+        #data=pd.DataFrame(data)
+
+        def get_period_day(date):
+            date_time = datetime.strptime(date, '%Y-%m-%d %H:%M:%S').time()
+            morning_min = datetime.strptime("05:00", '%H:%M').time()
+            morning_max = datetime.strptime("11:59", '%H:%M').time()
+            afternoon_min = datetime.strptime("12:00", '%H:%M').time()
+            afternoon_max = datetime.strptime("18:59", '%H:%M').time()
+            evening_min = datetime.strptime("19:00", '%H:%M').time()
+            evening_max = datetime.strptime("23:59", '%H:%M').time()
+            night_min = datetime.strptime("00:00", '%H:%M').time()
+            night_max = datetime.strptime("4:59", '%H:%M').time()
+    
+            if(date_time > morning_min and date_time < morning_max):
+                return 'mañana'
+            elif(date_time > afternoon_min and date_time < afternoon_max):
+                return 'tarde'
+            elif(
+                (date_time > evening_min and date_time < evening_max) or
+                (date_time > night_min and date_time < night_max)
+            ):
+                return 'noche'
+
+        data['period_day'] = data['Fecha-I'].apply(get_period_day)
+
+        def is_high_season(fecha):
+            fecha_año = int(fecha.split('-')[0])
+            fecha = datetime.strptime(fecha, '%Y-%m-%d %H:%M:%S')
+            range1_min = datetime.strptime('15-Dec', '%d-%b').replace(year = fecha_año)
+            range1_max = datetime.strptime('31-Dec', '%d-%b').replace(year = fecha_año)
+            range2_min = datetime.strptime('1-Jan', '%d-%b').replace(year = fecha_año)
+            range2_max = datetime.strptime('3-Mar', '%d-%b').replace(year = fecha_año)
+            range3_min = datetime.strptime('15-Jul', '%d-%b').replace(year = fecha_año)
+            range3_max = datetime.strptime('31-Jul', '%d-%b').replace(year = fecha_año)
+            range4_min = datetime.strptime('11-Sep', '%d-%b').replace(year = fecha_año)
+            range4_max = datetime.strptime('30-Sep', '%d-%b').replace(year = fecha_año)
+    
+            if ((fecha >= range1_min and fecha <= range1_max) or 
+                (fecha >= range2_min and fecha <= range2_max) or 
+                (fecha >= range3_min and fecha <= range3_max) or
+                (fecha >= range4_min and fecha <= range4_max)):
+                return 1
+            else:
+                return 0
+
+        data['high_season'] = data['Fecha-I'].apply(is_high_season)
+
         def get_min_diff(data):
             fecha_o = datetime.strptime(data['Fecha-O'], '%Y-%m-%d %H:%M:%S')
             fecha_i = datetime.strptime(data['Fecha-I'], '%Y-%m-%d %H:%M:%S')
@@ -72,7 +156,7 @@ class DelayModel:
         data['delay'] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)     
         
         
-        training_data = shuffle(data[['OPERA', 'MES', 'TIPOVUELO', 'SIGLADES', 'DIANOM', 'delay']], random_state = 111)
+        #data = shuffle(data[['OPERA', 'MES', 'TIPOVUELO', 'SIGLADES', 'DIANOM', 'delay']], random_state = 111)
 
         features = pd.concat([
         pd.get_dummies(data['OPERA'], prefix = 'OPERA'),
@@ -83,9 +167,6 @@ class DelayModel:
 
         target = data['delay']
 
-        n_y0 = len(target[target == 0])
-        n_y1 = len(target[target == 1])
-        scale = n_y0/n_y1
 
         top_10_features = [
         "OPERA_Latin American Wings", 
@@ -99,15 +180,21 @@ class DelayModel:
         "OPERA_Sky Airline",
         "OPERA_Copa Air"
         ]
+        #features=pd.DataFrame(features[top_10_features])
         features=features[top_10_features]
-        target=target
-        #features_validation,target_validation = train_test_split(features[top_10_features],target, test_size = 0.33, random_state = 42)
-
-        #x_train, x_test, y_train, y_test = train_test_split(features, target, test_size = 0.33, random_state = 42)
-
         
-        #return x_train, x_test, y_train, y_test
-        return features,target
+        features=pd.DataFrame(features)
+        target=pd.DataFrame(target)
+
+        #if target_column is not None:
+            # Si 'target_column' no es None, separamos las características y el objetivo en dos DataFrames
+        #features = pd.DataFrame(data.drop(columns=[target_column]))
+        #target = pd.DataFrame(data[[target_column]])
+        return features, target
+        #else:
+            # Si 'target_column' es None, devolvemos solo las características
+        #    return data.drop(columns=[target_column])
+
     
     def fit(
         self,
@@ -137,26 +224,30 @@ class DelayModel:
         Returns:
             (List[int]): predicted targets.
         """
+        #data = pd.read_csv('data/data.csv', low_memory=False)
+        #features,target = self.preprocess(data,target_column="delay")
+        #features = self.preprocess(data=features)[0]
+        #_, features_validation, _, target_validation = train_test_split(features, test_size = 0.33, random_state = 42)
         predictions = self._model.predict(features)
-        return predictions
+        return predictions.tolist()
 
 # Cargar tus datos en un DataFrame de pandas
-data = pd.read_csv('data/data.csv', low_memory=False)
+#data = pd.read_csv('data/data.csv', low_memory=False)
 
 # Crear una instancia de la clase DelayModel
-model = DelayModel()
+#model = DelayModel()
 
 # Preprocesar los datos
-features_validation,target_validation = model.preprocess(data,target_column="delay")
+#features_validation,target_validation = model.preprocess(data,target_column="delay")
 
 # Entrenar el modelo
-model.fit(features_validation, target_validation)
+#model.fit(features_validation, target_validation)
 
 # Realizar predicciones
-new_data = pd.read_csv("data/data.csv", low_memory=False)  # Reemplaza con tus nuevos datos
-predictions = model.predict(features_validation)
+#new_data = pd.read_csv("data/data.csv", low_memory=False)  # Reemplaza con tus nuevos datos
+#predictions = model.predict(features_validation)
 #print(predictions)
 
-from sklearn.metrics import confusion_matrix, classification_report
+#from sklearn.metrics import confusion_matrix, classification_report
 
-print(confusion_matrix(target_validation, predictions))
+#print(confusion_matrix(target_validation, predictions))
