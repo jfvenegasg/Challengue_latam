@@ -1,3 +1,4 @@
+#En esta primera sección se importan las librerias a utilizar durante el documento model.py
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -14,6 +15,9 @@ class DelayModel:
     def __init__(
         self
     ):  
+        #En esta seccion se cargan los datos del modelo junto con el preprocesamiento
+        #debido a que el modelo xgb  requiere del parametro *scale_pos_weight = scale*
+
         data=pd.read_csv('data/data.csv', low_memory=False)
 
         def get_period_day(date):
@@ -79,8 +83,7 @@ class DelayModel:
         n_y1 = len(target[target == 1])
         scale = n_y0/n_y1
 
-        self._model = xgb.XGBClassifier(random_state=1, learning_rate=0.01, scale_pos_weight = scale) # Model should be saved in this attribute.
-
+        self._model = xgb.XGBClassifier(random_state=1, learning_rate=0.01, scale_pos_weight = scale) 
     def preprocess(
         self,
         data: pd.DataFrame,
@@ -98,7 +101,9 @@ class DelayModel:
             or
             pd.DataFrame: features.
         """
-        #data=pd.DataFrame(data)
+        #En esta funcion *preprocess* se realiza todo el preprocesamiento que se
+        # realiza a los datos,luego esta función retorna los features y target como un
+        # pd.DataFrame() 
 
         def get_period_day(date):
             date_time = datetime.strptime(date, '%Y-%m-%d %H:%M:%S').time()
@@ -180,7 +185,7 @@ class DelayModel:
         "OPERA_Sky Airline",
         "OPERA_Copa Air"
         ]
-        #features=pd.DataFrame(features[top_10_features])
+        
         features=features[top_10_features]
         
         features=pd.DataFrame(features)
@@ -190,10 +195,9 @@ class DelayModel:
             # Si 'target_column' no es None, separamos las características y el objetivo en dos DataFrames
         #features = pd.DataFrame(data.drop(columns=[target_column]))
         #target = pd.DataFrame(data[[target_column]])
+
         return features, target
-        #else:
-            # Si 'target_column' es None, devolvemos solo las características
-        #    return data.drop(columns=[target_column])
+        
 
     
     def fit(
@@ -208,6 +212,10 @@ class DelayModel:
             features (pd.DataFrame): preprocessed data.
             target (pd.DataFrame): target.
         """
+        #Esta función fit solo se encarga de ajustar el modelo xgb,
+        #mediante el uso de los features y target entregados como argumentos
+        #de la funcion.
+
         self._model.fit(features,target)
         return
 
@@ -224,12 +232,21 @@ class DelayModel:
         Returns:
             (List[int]): predicted targets.
         """
+        #Esta funcion predict,realiza las predicciones mediante el uso del modelo
+        #ya ajustado en la funcion *fit*
+        #finalmente la funcion retorna las predicciones como una lista
+
         #data = pd.read_csv('data/data.csv', low_memory=False)
         #features,target = self.preprocess(data,target_column="delay")
         #features = self.preprocess(data=features)[0]
         #_, features_validation, _, target_validation = train_test_split(features, test_size = 0.33, random_state = 42)
         predictions = self._model.predict(features)
         return predictions.tolist()
+
+
+#En esta ultima sección realice algunos test dentro del mismo documento *model.py*
+#al realizar estos test,se muestran los resultados
+#Sin embargo al ejecutar el make test-model,solo se pasan 2 de 4
 
 # Cargar tus datos en un DataFrame de pandas
 #data = pd.read_csv('data/data.csv', low_memory=False)
